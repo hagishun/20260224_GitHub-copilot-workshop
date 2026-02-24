@@ -12,6 +12,7 @@
     <div class="card-header">
       <h1 class="card-title">ポモドーロタイマー</h1>
       <div class="window-controls">
+        <button id="settings-btn" class="control settings-icon" title="設定">⚙️</button>
         <span class="control">ー</span>
         <span class="control">□</span>
         <span class="control">×</span>
@@ -86,6 +87,88 @@
     <div class="history-section" id="history-section" style="display: none;">
       <h2 class="progress-title">セッション履歴</h2>
       <ul class="history-list" id="history-list"></ul>
+    </div>
+  </div>
+
+  <!-- 設定パネル -->
+  <div class="settings-panel" id="settings-panel">
+    <div class="settings-content">
+      <div class="settings-header">
+        <h2>設定</h2>
+        <button class="settings-close" id="settings-close">×</button>
+      </div>
+
+      <!-- 時間設定 -->
+      <div class="settings-section">
+        <h3>⏰ 時間設定</h3>
+        <div class="setting-item">
+          <label for="work-duration">作業時間</label>
+          <select id="work-duration">
+            <option value="15">15分</option>
+            <option value="25" selected>25分</option>
+            <option value="35">35分</option>
+            <option value="45">45分</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label for="short-break-duration">短い休憩</label>
+          <select id="short-break-duration">
+            <option value="5" selected>5分</option>
+            <option value="10">10分</option>
+            <option value="15">15分</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label for="long-break-duration">長い休憩</label>
+          <select id="long-break-duration">
+            <option value="5">5分</option>
+            <option value="10">10分</option>
+            <option value="15" selected>15分</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- テーマ設定 -->
+      <div class="settings-section">
+        <h3>🎨 テーマ</h3>
+        <div class="theme-buttons">
+          <button class="theme-btn active" data-theme="light">☀️ ライト</button>
+          <button class="theme-btn" data-theme="dark">🌙 ダーク</button>
+          <button class="theme-btn" data-theme="focus">🎯 フォーカス</button>
+        </div>
+      </div>
+
+      <!-- サウンド設定 -->
+      <div class="settings-section">
+        <h3>🔊 サウンド設定</h3>
+        <div class="setting-item">
+          <label>
+            <input type="checkbox" id="sound-enabled" checked>
+            サウンドを有効にする
+          </label>
+        </div>
+        <div class="setting-item sub-setting">
+          <label>
+            <input type="checkbox" id="start-sound-enabled" checked>
+            開始音
+          </label>
+        </div>
+        <div class="setting-item sub-setting">
+          <label>
+            <input type="checkbox" id="end-sound-enabled" checked>
+            終了音
+          </label>
+        </div>
+        <div class="setting-item sub-setting">
+          <label>
+            <input type="checkbox" id="tick-sound-enabled">
+            tick音
+          </label>
+        </div>
+      </div>
+
+      <!-- 保存ボタン -->
+      <button class="btn btn-primary" id="save-settings-btn">設定を保存</button>
     </div>
   </div>
 

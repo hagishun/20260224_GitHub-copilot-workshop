@@ -11,8 +11,11 @@ import {
   DURATIONS,
   formatTime,
   calculateProgress,
-  nextState
+  nextState,
+  createDurationsFromSettings
 } from './timer.js';
+
+import { initSettings, getCurrentSettings } from './settings-ui.js';
 
 // ── DOM 要素 ──
 const timerDisplay = document.getElementById('timer-display');
@@ -37,6 +40,7 @@ let totalDuration = DURATIONS.WORK;
 let sessionCount = 0;
 let intervalId = null;
 let isPaused = false;
+let customDurations = DURATIONS; // 設定から読み込んだカスタム時間設定
 
 // ── 初期状態のラベルマップ ──
 const STATE_LABELS = {
@@ -47,9 +51,18 @@ const STATE_LABELS = {
 };
 
 // ── 初期化 ──
-updateDisplay();
-updateProgress(0);
-loadTodayStats();
+async function init() {
+  await initSettings();
+  const settings = getCurrentSettings();
+  customDurations = createDurationsFromSettings(settings);
+  remaining = customDurations.WORK;
+  totalDuration = customDurations.WORK;
+  updateDisplay();
+  updateProgress(0);
+  loadTodayStats();
+}
+
+init();
 
 // ── イベントリスナー ──
 startBtn.addEventListener('click', handleStartPause);
@@ -92,7 +105,7 @@ function handleStartPause() {
  */
 function start() {
   if (currentState === STATES.IDLE) {
-    const next = nextState(STATES.IDLE, sessionCount);
+    const next = nextState(STATES.IDLE, sessionCount, customDurations);
     currentState = next.state;
     remaining = next.duration;
     totalDuration = next.duration;
@@ -101,6 +114,13 @@ function start() {
   isPaused = false;
   startBtn.textContent = '一時停止';
   updateStatusLabel();
+  
+  // 開始音を再生
+  const settings = getCurrentSettings();
+  if (settings.sound_enabled && settings.start_sound_enabled) {
+    playStartSound();
+  }
+  
   tick();
   intervalId = setInterval(tick, 1000);
 }
@@ -131,8 +151,10 @@ function handleReset() {
   intervalId = null;
   isPaused = false;
   currentState = STATES.IDLE;
-  remaining = DURATIONS.WORK;
-  totalDuration = DURATIONS.WORK;
+  const settings = getCurrentSettings();
+  customDurations = createDurationsFromSettings(settings);
+  remaining = customDurations.WORK;
+  totalDuration = customDurations.WORK;
   sessionCount = 0;
 
   startBtn.textContent = '開始';
@@ -155,6 +177,12 @@ function tick() {
   updateProgress(progress);
   updateDocumentTitle();
 
+  // tick音を再生
+  const settings = getCurrentSettings();
+  if (settings.sound_enabled && settings.tick_sound_enabled) {
+    playTickSound();
+  }
+
   if (remaining <= 0) {
     clearInterval(intervalId);
     intervalId = null;
@@ -170,7 +198,7 @@ async function onSessionComplete() {
   if (currentState === STATES.WORKING) {
     sessionCount++;
     updateIndicators();
-    await recordSession(DURATIONS.WORK / 60);
+    await recordSession(customDurations.WORK / 60);
     await loadTodayStats();
   }
 
@@ -178,7 +206,7 @@ async function onSessionComplete() {
   notifySessionEnd();
 
   // 次の状態に遷移
-  const next = nextState(currentState, sessionCount);
+  const next = nextState(currentState, sessionCount, customDurations);
   currentState = next.state;
   remaining = next.duration;
   totalDuration = next.duration;
@@ -281,8 +309,11 @@ function notifySessionEnd() {
     Notification.requestPermission();
   }
 
-  // 通知音
-  playNotificationSound();
+  // 終了音を再生
+  const settings = getCurrentSettings();
+  if (settings.sound_enabled && settings.end_sound_enabled) {
+    playNotificationSound();
+  }
 }
 
 /**
@@ -316,6 +347,52 @@ function playNotificationSound() {
       osc2.start();
       osc2.stop(audioCtx.currentTime + 0.3);
     }, 400);
+  } catch {
+    // AudioContext 非対応環境では無視
+  }
+}
+
+/**
+ * 開始音を再生する
+ */
+function playStartSound() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.frequency.value = 600;
+    oscillator.type = 'sine';
+    gainNode.gain.value = 0.2;
+
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.15);
+  } catch {
+    // AudioContext 非対応環境では無視
+  }
+}
+
+/**
+ * tick音を再生する
+ */
+function playTickSound() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.frequency.value = 440;
+    oscillator.type = 'sine';
+    gainNode.gain.value = 0.05;
+
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.05);
   } catch {
     // AudioContext 非対応環境では無視
   }
