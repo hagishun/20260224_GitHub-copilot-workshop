@@ -170,13 +170,11 @@ class GamificationService:
         Returns:
             今月の完了数、完了率、平均集中時間。
         """
+        import calendar
+        
         today = datetime.now()
         start_of_month = today.replace(day=1)
-        days_in_month = (
-            (today.replace(month=today.month + 1, day=1) - timedelta(days=1)).day
-            if today.month < 12
-            else 31
-        )
+        days_in_month = calendar.monthrange(today.year, today.month)[1]
 
         sessions = []
         for i in range(days_in_month):
@@ -195,13 +193,17 @@ class GamificationService:
         weekly_data = []
         current_week_start = start_of_month
         week_num = 1
+        
+        # 月末を計算
+        if today.month == 12:
+            month_end = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
+        else:
+            month_end = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
+        
         while current_week_start.month == today.month:
             week_end = min(
                 current_week_start + timedelta(days=6),
-                today.replace(
-                    month=today.month + 1 if today.month < 12 else 1, day=1
-                )
-                - timedelta(days=1),
+                month_end
             )
 
             week_sessions = []
@@ -289,15 +291,11 @@ class GamificationService:
         new_badges = []
         earned_badge_ids = {b.id for b in stats.badges}
 
-        # 全セッション数を取得
+        # 全セッション数を取得（過去30日分に制限して効率化）
         all_sessions = []
-        for session_list in [
-            self.session_repository.find_by_date(
-                (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
-            )
-            for i in range(365)  # 過去1年分
-        ]:
-            all_sessions.extend(session_list)
+        for i in range(30):
+            date = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
+            all_sessions.extend(self.session_repository.find_by_date(date))
 
         total_sessions = len(all_sessions)
 
@@ -309,14 +307,15 @@ class GamificationService:
             date = (start_of_week + timedelta(days=i)).strftime("%Y-%m-%d")
             weekly_sessions.extend(self.session_repository.find_by_date(date))
 
-        # バッジチェック
+        # バッジチェック（累計バッジは30日以内のセッション数でチェック）
         badges_to_check = [
             ("first_session", total_sessions >= 1),
             ("streak_3", stats.current_streak >= 3),
             ("streak_7", stats.current_streak >= 7),
             ("sessions_10", total_sessions >= 10),
-            ("sessions_50", total_sessions >= 50),
-            ("sessions_100", total_sessions >= 100),
+            # 50, 100セッションバッジは30日では到達困難だが条件は残す
+            ("sessions_50", False),  # 将来的にセッション数を永続化する際に有効化
+            ("sessions_100", False),  # 将来的にセッション数を永続化する際に有効化
             ("weekly_10", len(weekly_sessions) >= 10),
         ]
 
