@@ -23,6 +23,20 @@ export const DURATIONS = {
 };
 
 /**
+ * カスタム設定を使用した DURATIONS を生成する
+ * @param {object} settings - 設定オブジェクト（work_duration, short_break_duration, long_break_duration を含む）
+ * @returns {object} カスタマイズされた DURATIONS オブジェクト
+ */
+export function createDurationsFromSettings(settings) {
+  return {
+    WORK: (settings.work_duration || 25) * 60,
+    SHORT_BREAK: (settings.short_break_duration || 5) * 60,
+    LONG_BREAK: (settings.long_break_duration || 15) * 60,
+    SESSIONS_BEFORE_LONG_BREAK: 4
+  };
+}
+
+/**
  * 秒数を MM:SS 形式にフォーマットする
  * @param {number} totalSeconds - 合計秒数（0 以上の整数）
  * @returns {string} "MM:SS" 形式の文字列
@@ -48,21 +62,22 @@ export function calculateProgress(elapsed, total) {
  * 現在の状態と完了セッション数から次の状態と時間を返す
  * @param {string} currentState - 現在の状態（STATES の値）
  * @param {number} sessionCount - 完了した作業セッション数
+ * @param {object} [durations=DURATIONS] - 使用する時間設定（オプション）
  * @returns {{ state: string, duration: number }} 次の状態と継続時間（秒）
  */
-export function nextState(currentState, sessionCount) {
+export function nextState(currentState, sessionCount, durations = DURATIONS) {
   switch (currentState) {
     case STATES.IDLE:
-      return { state: STATES.WORKING, duration: DURATIONS.WORK };
+      return { state: STATES.WORKING, duration: durations.WORK };
 
     case STATES.WORKING:
-      if (sessionCount >= DURATIONS.SESSIONS_BEFORE_LONG_BREAK) {
-        return { state: STATES.LONG_BREAK, duration: DURATIONS.LONG_BREAK };
+      if (sessionCount >= durations.SESSIONS_BEFORE_LONG_BREAK) {
+        return { state: STATES.LONG_BREAK, duration: durations.LONG_BREAK };
       }
-      return { state: STATES.SHORT_BREAK, duration: DURATIONS.SHORT_BREAK };
+      return { state: STATES.SHORT_BREAK, duration: durations.SHORT_BREAK };
 
     case STATES.SHORT_BREAK:
-      return { state: STATES.WORKING, duration: DURATIONS.WORK };
+      return { state: STATES.WORKING, duration: durations.WORK };
 
     case STATES.LONG_BREAK:
       return { state: STATES.IDLE, duration: 0 };
