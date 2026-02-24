@@ -8,6 +8,8 @@ from flask import Flask, jsonify, render_template, request
 
 from config import Config
 from repositories.session_repository import SessionRepository
+from repositories.user_stats_repository import UserStatsRepository
+from services.gamification_service import GamificationService
 from services.pomodoro_service import PomodoroService
 
 
@@ -28,9 +30,12 @@ def create_app(config: object | None = None) -> Flask:
         app.config.from_object(Config)
 
     # サービス・リポジトリの初期化
-    repository = SessionRepository()
-    service = PomodoroService(repository)
+    session_repository = SessionRepository()
+    stats_repository = UserStatsRepository()
+    service = PomodoroService(session_repository)
+    gamification_service = GamificationService(stats_repository, session_repository)
     app.service = service
+    app.gamification_service = gamification_service
 
     @app.route("/")
     def index() -> str:
@@ -47,6 +52,11 @@ def create_app(config: object | None = None) -> Flask:
         data = request.get_json()
         duration_minutes = data.get("duration_minutes", 25)
         result = service.complete_session(duration_minutes)
+
+        # ゲーミフィケーション処理
+        gamification_result = gamification_service.process_session_completion()
+        result.update(gamification_result)
+
         return jsonify(result), 201
 
     @app.route("/api/sessions/today", methods=["GET"])
@@ -57,6 +67,46 @@ def create_app(config: object | None = None) -> Flask:
             今日の統計情報の JSON と 200 ステータスコード。
         """
         stats = service.get_today_stats()
+        return jsonify(stats), 200
+
+    @app.route("/api/gamification/stats", methods=["GET"])
+    def get_gamification_stats() -> tuple:
+        """ゲーミフィケーション統計を返す。
+
+        Returns:
+            XP、レベル、ストリーク、バッジの JSON と 200 ステータスコード。
+        """
+        stats = gamification_service.get_stats()
+        return jsonify(stats), 200
+
+    @app.route("/api/gamification/badges", methods=["GET"])
+    def get_badges() -> tuple:
+        """獲得したバッジ一覧を返す。
+
+        Returns:
+            バッジのリストの JSON と 200 ステータスコード。
+        """
+        stats = gamification_service.get_stats()
+        return jsonify({"badges": stats["badges"]}), 200
+
+    @app.route("/api/gamification/history/weekly", methods=["GET"])
+    def get_weekly_history() -> tuple:
+        """週間統計を返す。
+
+        Returns:
+            週間統計の JSON と 200 ステータスコード。
+        """
+        stats = gamification_service.get_weekly_stats()
+        return jsonify(stats), 200
+
+    @app.route("/api/gamification/history/monthly", methods=["GET"])
+    def get_monthly_history() -> tuple:
+        """月間統計を返す。
+
+        Returns:
+            月間統計の JSON と 200 ステータスコード。
+        """
+        stats = gamification_service.get_monthly_stats()
         return jsonify(stats), 200
 
     return app
