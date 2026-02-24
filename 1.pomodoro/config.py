@@ -1,9 +1,12 @@
 """ポモドーロタイマー アプリケーション設定モジュール。"""
 
+import os
+
 
 class Config:
     """本番用設定。"""
 
+    DEBUG: bool = os.environ.get("FLASK_DEBUG", "False").lower() in ("true", "1", "yes")
     WORK_DURATION: int = 25 * 60  # 秒
     SHORT_BREAK_DURATION: int = 5 * 60
     LONG_BREAK_DURATION: int = 15 * 60
