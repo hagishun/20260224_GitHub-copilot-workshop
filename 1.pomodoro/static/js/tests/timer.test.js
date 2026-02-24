@@ -3,7 +3,7 @@
  * @module timer.test
  */
 
-import { formatTime, calculateProgress, nextState, STATES, DURATIONS } from '../timer.js';
+import { formatTime, calculateProgress, calculateColor, nextState, STATES, DURATIONS } from '../timer.js';
 
 // ============================================
 // formatTime
@@ -68,6 +68,41 @@ describe('calculateProgress', () => {
 
   it('1/3 経過で約 0.333 を返す', () => {
     expect(calculateProgress(500, 1500)).toBeCloseTo(0.333, 2);
+  });
+});
+
+// ============================================
+// calculateColor
+// ============================================
+describe('calculateColor', () => {
+  it('進捗0%で青色を返す', () => {
+    const color = calculateColor(0);
+    expect(color).toBe('rgb(99, 102, 241)');
+  });
+
+  it('進捗25%で青と黄の中間色を返す', () => {
+    const color = calculateColor(0.25);
+    expect(color).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+  });
+
+  it('進捗50%で黄色を返す', () => {
+    const color = calculateColor(0.5);
+    expect(color).toBe('rgb(234, 179, 8)');
+  });
+
+  it('進捗75%で黄と赤の中間色を返す', () => {
+    const color = calculateColor(0.75);
+    expect(color).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+  });
+
+  it('進捗100%で赤色を返す', () => {
+    const color = calculateColor(1.0);
+    expect(color).toBe('rgb(239, 68, 68)');
+  });
+
+  it('RGB形式の文字列を返す', () => {
+    const color = calculateColor(0.3);
+    expect(color).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
   });
 });
 
