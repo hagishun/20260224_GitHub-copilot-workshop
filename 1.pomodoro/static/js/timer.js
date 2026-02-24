@@ -45,6 +45,38 @@ export function calculateProgress(elapsed, total) {
 }
 
 /**
+ * 進捗率に基づいて色を計算する（青→黄→赤のグラデーション）
+ * @param {number} progress - 0.0〜1.0 の進捗率
+ * @returns {string} RGB形式の色文字列（例: "rgb(99, 102, 241)"）
+ */
+export function calculateColor(progress) {
+  // 0.0〜0.5: 青(#6366f1) → 黄(#eab308)
+  // 0.5〜1.0: 黄(#eab308) → 赤(#ef4444)
+  
+  const blue = { r: 99, g: 102, b: 241 };
+  const yellow = { r: 234, g: 179, b: 8 };
+  const red = { r: 239, g: 68, b: 68 };
+  
+  let r, g, b;
+  
+  if (progress <= 0.5) {
+    // 青から黄へ
+    const t = progress * 2; // 0.0〜1.0 にスケール
+    r = Math.round(blue.r + (yellow.r - blue.r) * t);
+    g = Math.round(blue.g + (yellow.g - blue.g) * t);
+    b = Math.round(blue.b + (yellow.b - blue.b) * t);
+  } else {
+    // 黄から赤へ
+    const t = (progress - 0.5) * 2; // 0.0〜1.0 にスケール
+    r = Math.round(yellow.r + (red.r - yellow.r) * t);
+    g = Math.round(yellow.g + (red.g - yellow.g) * t);
+    b = Math.round(yellow.b + (red.b - yellow.b) * t);
+  }
+  
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+/**
  * 現在の状態と完了セッション数から次の状態と時間を返す
  * @param {string} currentState - 現在の状態（STATES の値）
  * @param {number} sessionCount - 完了した作業セッション数

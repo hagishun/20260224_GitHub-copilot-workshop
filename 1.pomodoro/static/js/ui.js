@@ -11,6 +11,7 @@ import {
   DURATIONS,
   formatTime,
   calculateProgress,
+  calculateColor,
   nextState
 } from './timer.js';
 
@@ -25,6 +26,7 @@ const totalFocusTimeEl = document.getElementById('total-focus-time');
 const pomodoroIndicators = document.getElementById('pomodoro-indicators');
 const historySection = document.getElementById('history-section');
 const historyList = document.getElementById('history-list');
+const backgroundEffect = document.getElementById('background-effect');
 
 // ── 定数 ──
 const RADIUS = 95;
@@ -218,6 +220,10 @@ function updateDisplay() {
 function updateProgress(progress) {
   const offset = CIRCUMFERENCE * (1 - progress);
   progressRing.style.strokeDashoffset = offset;
+  
+  // 進捗に応じて色を変更（青→黄→赤）
+  const color = calculateColor(progress);
+  progressRing.style.stroke = color;
 }
 
 /**
@@ -230,8 +236,12 @@ function updateStatusLabel() {
   statusLabel.classList.remove('working', 'break');
   if (currentState === STATES.WORKING) {
     statusLabel.classList.add('working');
+    backgroundEffect.classList.add('active');
   } else if (currentState === STATES.SHORT_BREAK || currentState === STATES.LONG_BREAK) {
     statusLabel.classList.add('break');
+    backgroundEffect.classList.remove('active');
+  } else {
+    backgroundEffect.classList.remove('active');
   }
 }
 

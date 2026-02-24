@@ -16,6 +16,67 @@ body {
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 背景エフェクト */
+.background-effect {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 0;
+}
+
+.background-effect.active {
+  opacity: 1;
+}
+
+/* パーティクルアニメーション */
+.background-effect.active::before,
+.background-effect.active::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  animation: float 8s ease-in-out infinite;
+}
+
+.background-effect.active::before {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+  top: 10%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.background-effect.active::after {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%);
+  top: 60%;
+  right: 10%;
+  animation-delay: 2s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0) scale(1);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px) scale(1.05);
+  }
+  50% {
+    transform: translateY(-10px) translateX(-10px) scale(0.95);
+  }
+  75% {
+    transform: translateY(-30px) translateX(5px) scale(1.02);
+  }
 }
 
 /* カード */
@@ -26,6 +87,8 @@ body {
   padding: 0 40px 36px;
   width: 380px;
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 /* ヘッダー */
