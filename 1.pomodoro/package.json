@@ -1,0 +1,17 @@
+{
+  "name": "pomodoro-timer",
+  "version": "1.0.0",
+  "description": "ポモドーロタイマー Web アプリケーション",
+  "type": "module",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest static/js/tests/ --passWithNoTests",
+    "test:all": "npm test && python -m pytest tests/ -v"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.0.0",
+    "jest": "^29.0.0"
+  },
+  "jest": {
+    "transform": {}
+  }
+}

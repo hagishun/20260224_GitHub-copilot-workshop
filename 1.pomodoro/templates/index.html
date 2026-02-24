@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ポモドーロタイマー</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="card">
+    <!-- ヘッダー -->
+    <div class="card-header">
+      <h1 class="card-title">ポモドーロタイマー</h1>
+      <div class="window-controls">
+        <span class="control">ー</span>
+        <span class="control">□</span>
+        <span class="control">×</span>
+      </div>
+    </div>
+
+    <!-- 状態表示 -->
+    <div class="status-label" id="status-label">作業中</div>
+
+    <!-- 円形タイマー -->
+    <div class="timer-circle">
+      <svg width="220" height="220" viewBox="0 0 220 220">
+        <defs>
+          <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#6366f1" />
+            <stop offset="100%" stop-color="#a855f7" />
+          </linearGradient>
+        </defs>
+        <!-- 背景の円 -->
+        <circle
+          cx="110" cy="110" r="95"
+          fill="none"
+          stroke="rgba(0, 0, 0, 0.06)"
+          stroke-width="8"
+        />
+        <!-- プログレスの円 -->
+        <circle
+          id="progress-ring"
+          cx="110" cy="110" r="95"
+          fill="none"
+          stroke="url(#progress-gradient)"
+          stroke-width="8"
+          stroke-linecap="round"
+          stroke-dasharray="596.90"
+          stroke-dashoffset="0"
+          transform="rotate(-90 110 110)"
+        />
+      </svg>
+      <div class="timer-display" id="timer-display">25:00</div>
+    </div>
+
+    <!-- 操作ボタン -->
+    <div class="controls">
+      <button class="btn btn-primary" id="start-btn">開始</button>
+      <button class="btn btn-outline" id="reset-btn">リセット</button>
+    </div>
+
+    <!-- 今日の進捗 -->
+    <div class="progress-section">
+      <h2 class="progress-title">今日の進捗</h2>
+      <div class="progress-stats">
+        <div class="stat">
+          <span class="stat-value" id="completed-count">0</span>
+          <span class="stat-label">完了</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="total-focus-time">0分</span>
+          <span class="stat-label">集中時間</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ポモドーロインジケーター -->
+    <div class="pomodoro-indicators" id="pomodoro-indicators">
+      <span class="indicator" data-index="0">○</span>
+      <span class="indicator" data-index="1">○</span>
+      <span class="indicator" data-index="2">○</span>
+      <span class="indicator" data-index="3">○</span>
+    </div>
+
+    <!-- セッション履歴 -->
+    <div class="history-section" id="history-section" style="display: none;">
+      <h2 class="progress-title">セッション履歴</h2>
+      <ul class="history-list" id="history-list"></ul>
+    </div>
+  </div>
+
+  <script type="module" src="{{ url_for('static', filename='js/ui.js') }}"></script>
+</body>
+</html>
