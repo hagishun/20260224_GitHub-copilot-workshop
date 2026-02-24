@@ -8,7 +8,9 @@ from flask import Flask, jsonify, render_template, request
 
 from config import Config
 from repositories.session_repository import SessionRepository
+from repositories.settings_repository import SettingsRepository
 from services.pomodoro_service import PomodoroService
+from services.settings_service import SettingsService
 
 
 def create_app(config: object | None = None) -> Flask:
@@ -28,9 +30,13 @@ def create_app(config: object | None = None) -> Flask:
         app.config.from_object(Config)
 
     # サービス・リポジトリの初期化
-    repository = SessionRepository()
-    service = PomodoroService(repository)
+    session_repository = SessionRepository()
+    service = PomodoroService(session_repository)
     app.service = service
+
+    settings_repository = SettingsRepository()
+    settings_service = SettingsService(settings_repository)
+    app.settings_service = settings_service
 
     @app.route("/")
     def index() -> str:
@@ -58,6 +64,31 @@ def create_app(config: object | None = None) -> Flask:
         """
         stats = service.get_today_stats()
         return jsonify(stats), 200
+
+    @app.route("/api/settings", methods=["GET"])
+    def get_settings() -> tuple:
+        """現在の設定を返す。
+
+        Returns:
+            設定の JSON と 200 ステータスコード。
+        """
+        settings = settings_service.get_settings()
+        return jsonify(settings), 200
+
+    @app.route("/api/settings", methods=["PUT"])
+    def update_settings() -> tuple:
+        """設定を更新する。
+
+        Returns:
+            更新後の設定の JSON と 200 ステータスコード。
+            エラーの場合は 400 ステータスコード。
+        """
+        data = request.get_json()
+        try:
+            result = settings_service.update_settings(data)
+            return jsonify(result), 200
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
 
     return app
 
