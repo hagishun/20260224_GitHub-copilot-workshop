@@ -74,6 +74,89 @@
       </div>
     </div>
 
+    <!-- ゲーミフィケーション: レベル＆XP -->
+    <div class="gamification-section">
+      <h2 class="progress-title">レベル＆経験値</h2>
+      <div class="level-display">
+        <div class="level-info">
+          <span class="level-label">Level</span>
+          <span class="level-value" id="user-level">1</span>
+        </div>
+        <div class="xp-bar-container">
+          <div class="xp-bar" id="xp-bar" style="width: 0%"></div>
+          <span class="xp-text" id="xp-text">0 / 100 XP</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ゲーミフィケーション: ストリーク -->
+    <div class="streak-section">
+      <h2 class="progress-title">連続記録</h2>
+      <div class="streak-display">
+        <div class="streak-icon">🔥</div>
+        <div class="streak-info">
+          <div class="streak-current" id="streak-current">0日連続</div>
+          <div class="streak-longest" id="streak-longest">最長: 0日</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ゲーミフィケーション: バッジ -->
+    <div class="badges-section">
+      <h2 class="progress-title">獲得バッジ</h2>
+      <div class="badges-grid" id="badges-grid">
+        <div class="badge-placeholder">まだバッジがありません</div>
+      </div>
+    </div>
+
+    <!-- ゲーミフィケーション: 統計切り替えタブ -->
+    <div class="stats-tabs">
+      <button class="stats-tab active" data-tab="weekly">週間統計</button>
+      <button class="stats-tab" data-tab="monthly">月間統計</button>
+    </div>
+
+    <!-- 週間統計 -->
+    <div class="stats-panel active" id="weekly-stats">
+      <div class="stats-summary">
+        <div class="stat">
+          <span class="stat-value" id="weekly-sessions">0</span>
+          <span class="stat-label">完了</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="weekly-minutes">0分</span>
+          <span class="stat-label">集中時間</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="weekly-avg">0.0分</span>
+          <span class="stat-label">日平均</span>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="weekly-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- 月間統計 -->
+    <div class="stats-panel" id="monthly-stats">
+      <div class="stats-summary">
+        <div class="stat">
+          <span class="stat-value" id="monthly-sessions">0</span>
+          <span class="stat-label">完了</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="monthly-minutes">0分</span>
+          <span class="stat-label">集中時間</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="monthly-avg">0.0分</span>
+          <span class="stat-label">日平均</span>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="monthly-chart"></canvas>
+      </div>
+    </div>
+
     <!-- ポモドーロインジケーター -->
     <div class="pomodoro-indicators" id="pomodoro-indicators">
       <span class="indicator" data-index="0">○</span>
@@ -89,6 +172,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script type="module" src="{{ url_for('static', filename='js/ui.js') }}"></script>
 </body>
 </html>

@@ -14,6 +14,13 @@ import {
   nextState
 } from './timer.js';
 
+import {
+  calculateLevelProgress,
+  calculateXpToNextLevel,
+  getStreakMessage,
+  sortBadgesByDate
+} from './gamification.js';
+
 // ── DOM 要素 ──
 const timerDisplay = document.getElementById('timer-display');
 const progressRing = document.getElementById('progress-ring');
@@ -25,6 +32,20 @@ const totalFocusTimeEl = document.getElementById('total-focus-time');
 const pomodoroIndicators = document.getElementById('pomodoro-indicators');
 const historySection = document.getElementById('history-section');
 const historyList = document.getElementById('history-list');
+
+// ゲーミフィケーション要素
+const userLevelEl = document.getElementById('user-level');
+const xpBarEl = document.getElementById('xp-bar');
+const xpTextEl = document.getElementById('xp-text');
+const streakCurrentEl = document.getElementById('streak-current');
+const streakLongestEl = document.getElementById('streak-longest');
+const badgesGridEl = document.getElementById('badges-grid');
+const weeklySessionsEl = document.getElementById('weekly-sessions');
+const weeklyMinutesEl = document.getElementById('weekly-minutes');
+const weeklyAvgEl = document.getElementById('weekly-avg');
+const monthlySessionsEl = document.getElementById('monthly-sessions');
+const monthlyMinutesEl = document.getElementById('monthly-minutes');
+const monthlyAvgEl = document.getElementById('monthly-avg');
 
 // ── 定数 ──
 const RADIUS = 95;
@@ -50,6 +71,9 @@ const STATE_LABELS = {
 updateDisplay();
 updateProgress(0);
 loadTodayStats();
+loadGamificationStats();
+loadWeeklyStats();
+initStatsTabs();
 
 // ── イベントリスナー ──
 startBtn.addEventListener('click', handleStartPause);
@@ -170,8 +194,17 @@ async function onSessionComplete() {
   if (currentState === STATES.WORKING) {
     sessionCount++;
     updateIndicators();
-    await recordSession(DURATIONS.WORK / 60);
+    const result = await recordSession(DURATIONS.WORK / 60);
     await loadTodayStats();
+    await loadGamificationStats();
+    
+    // レベルアップやバッジ獲得の通知
+    if (result && result.level_up) {
+      showLevelUpNotification(result.level);
+    }
+    if (result && result.new_badges && result.new_badges.length > 0) {
+      showNewBadgesNotification(result.new_badges);
+    }
   }
 
   // 通知
@@ -397,4 +430,265 @@ function addHistoryItem(completedAt, durationMinutes) {
 
   li.innerHTML = `<span class="history-time">${timeStr}</span> <span class="history-duration">${durationMinutes}分間 集中</span>`;
   historyList.prepend(li);
+}
+
+// ── ゲーミフィケーション ──
+
+/**
+ * ゲーミフィケーション統計を読み込んで表示する
+ */
+async function loadGamificationStats() {
+  try {
+    const response = await fetch('/api/gamification/stats');
+    if (!response.ok) {
+      console.error('ゲーミフィケーション統計取得に失敗しました:', response.status);
+      return;
+    }
+
+    const data = await response.json();
+    updateGamificationDisplay(data);
+  } catch (error) {
+    console.error('ゲーミフィケーション統計取得エラー:', error);
+  }
+}
+
+/**
+ * ゲーミフィケーション表示を更新する
+ * @param {object} data - 統計データ
+ */
+function updateGamificationDisplay(data) {
+  // レベル＆XP
+  userLevelEl.textContent = data.level;
+  const progress = calculateLevelProgress(data.xp, 100);
+  const xpInLevel = data.xp % 100;
+  const xpToNext = calculateXpToNextLevel(data.xp, 100);
+  xpBarEl.style.width = `${progress * 100}%`;
+  xpTextEl.textContent = `${xpInLevel} / 100 XP (次のレベルまで ${xpToNext} XP)`;
+
+  // ストリーク
+  const streakMsg = getStreakMessage(data.current_streak, data.longest_streak);
+  streakCurrentEl.textContent = `${data.current_streak}日連続`;
+  streakLongestEl.textContent = `最長: ${data.longest_streak}日`;
+
+  // バッジ
+  updateBadgesDisplay(data.badges);
+}
+
+/**
+ * バッジ表示を更新する
+ * @param {Array} badges - バッジの配列
+ */
+function updateBadgesDisplay(badges) {
+  if (!badges || badges.length === 0) {
+    badgesGridEl.innerHTML = '<div class="badge-placeholder">まだバッジがありません</div>';
+    return;
+  }
+
+  const sortedBadges = sortBadgesByDate(badges);
+  badgesGridEl.innerHTML = sortedBadges.map(badge => `
+    <div class="badge-item">
+      <div class="badge-icon">🏆</div>
+      <div class="badge-name">${badge.name}</div>
+      <div class="badge-description">${badge.description}</div>
+    </div>
+  `).join('');
+}
+
+/**
+ * レベルアップ通知を表示する
+ * @param {number} newLevel - 新しいレベル
+ */
+function showLevelUpNotification(newLevel) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('レベルアップ！', {
+      body: `レベル ${newLevel} に到達しました！🎉`,
+      icon: '/static/pomodoro.png'
+    });
+  }
+}
+
+/**
+ * 新バッジ獲得通知を表示する
+ * @param {Array} newBadges - 新しく獲得したバッジ
+ */
+function showNewBadgesNotification(newBadges) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    newBadges.forEach(badge => {
+      new Notification('バッジ獲得！', {
+        body: `「${badge.name}」を獲得しました！`,
+        icon: '/static/pomodoro.png'
+      });
+    });
+  }
+}
+
+/**
+ * 週間統計を読み込んで表示する
+ */
+async function loadWeeklyStats() {
+  try {
+    const response = await fetch('/api/gamification/history/weekly');
+    if (!response.ok) {
+      console.error('週間統計取得に失敗しました:', response.status);
+      return;
+    }
+
+    const data = await response.json();
+    updateWeeklyStatsDisplay(data);
+  } catch (error) {
+    console.error('週間統計取得エラー:', error);
+  }
+}
+
+/**
+ * 週間統計表示を更新する
+ * @param {object} data - 週間統計データ
+ */
+function updateWeeklyStatsDisplay(data) {
+  weeklySessionsEl.textContent = data.total_sessions;
+  weeklyMinutesEl.textContent = `${data.total_minutes}分`;
+  weeklyAvgEl.textContent = `${data.avg_minutes_per_day}分`;
+
+  // Chart.js でグラフ描画
+  const canvas = document.getElementById('weekly-chart');
+  if (canvas && typeof Chart !== 'undefined') {
+    const ctx = canvas.getContext('2d');
+    
+    // 既存のチャートがあれば破棄
+    if (canvas.chart) {
+      canvas.chart.destroy();
+    }
+
+    const labels = data.daily_data.map(d => {
+      const date = new Date(d.date);
+      return ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
+    });
+
+    canvas.chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'セッション数',
+          data: data.daily_data.map(d => d.sessions),
+          backgroundColor: 'rgba(99, 102, 241, 0.5)',
+          borderColor: 'rgba(99, 102, 241, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
+/**
+ * 月間統計を読み込んで表示する
+ */
+async function loadMonthlyStats() {
+  try {
+    const response = await fetch('/api/gamification/history/monthly');
+    if (!response.ok) {
+      console.error('月間統計取得に失敗しました:', response.status);
+      return;
+    }
+
+    const data = await response.json();
+    updateMonthlyStatsDisplay(data);
+  } catch (error) {
+    console.error('月間統計取得エラー:', error);
+  }
+}
+
+/**
+ * 月間統計表示を更新する
+ * @param {object} data - 月間統計データ
+ */
+function updateMonthlyStatsDisplay(data) {
+  monthlySessionsEl.textContent = data.total_sessions;
+  monthlyMinutesEl.textContent = `${data.total_minutes}分`;
+  monthlyAvgEl.textContent = `${data.avg_minutes_per_day}分`;
+
+  // Chart.js でグラフ描画
+  const canvas = document.getElementById('monthly-chart');
+  if (canvas && typeof Chart !== 'undefined') {
+    const ctx = canvas.getContext('2d');
+    
+    // 既存のチャートがあれば破棄
+    if (canvas.chart) {
+      canvas.chart.destroy();
+    }
+
+    const labels = data.weekly_data.map(d => `第${d.week}週`);
+
+    canvas.chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'セッション数',
+          data: data.weekly_data.map(d => d.sessions),
+          backgroundColor: 'rgba(168, 85, 247, 0.2)',
+          borderColor: 'rgba(168, 85, 247, 1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
+/**
+ * 統計タブの初期化
+ */
+function initStatsTabs() {
+  const tabs = document.querySelectorAll('.stats-tab');
+  const panels = document.querySelectorAll('.stats-panel');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const targetTab = tab.dataset.tab;
+      
+      // タブの active クラス切り替え
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      // パネルの表示切り替え
+      panels.forEach(panel => {
+        if (panel.id === `${targetTab}-stats`) {
+          panel.classList.add('active');
+        } else {
+          panel.classList.remove('active');
+        }
+      });
+
+      // 月間統計タブがクリックされたら、データを読み込む
+      if (targetTab === 'monthly') {
+        loadMonthlyStats();
+      }
+    });
+  });
 }

@@ -298,3 +298,216 @@ body.dark-mode .history-list li {
   color: #d1d5db;
   border-bottom-color: #374151;
 }
+
+/* ==========================================
+   ゲーミフィケーション要素
+   ========================================== */
+
+/* レベル＆XP */
+.gamification-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #f1f1f4;
+}
+
+.level-display {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.level-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.level-label {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.level-value {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.xp-bar-container {
+  position: relative;
+  height: 24px;
+  background: #f1f1f4;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.xp-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  border-radius: 12px;
+  transition: width 0.5s ease;
+}
+
+.xp-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e1e2e;
+  z-index: 1;
+}
+
+/* ストリーク */
+.streak-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #f1f1f4;
+}
+
+.streak-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(255, 123, 0, 0.1), rgba(255, 69, 0, 0.1));
+  border-radius: 12px;
+}
+
+.streak-icon {
+  font-size: 48px;
+}
+
+.streak-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.streak-current {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff6b00;
+}
+
+.streak-longest {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* バッジ */
+.badges-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #f1f1f4;
+}
+
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.badge-item {
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+  border-radius: 12px;
+  text-align: center;
+}
+
+.badge-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.badge-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e1e2e;
+  margin-bottom: 4px;
+}
+
+.badge-description {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.badge-placeholder {
+  grid-column: 1 / -1;
+  padding: 24px;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* 統計タブ */
+.stats-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #f1f1f4;
+}
+
+.stats-tab {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.stats-tab:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.stats-tab.active {
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+/* 統計パネル */
+.stats-panel {
+  display: none;
+  margin-top: 16px;
+}
+
+.stats-panel.active {
+  display: block;
+}
+
+.stats-summary {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 16px;
+}
+
+.chart-container {
+  position: relative;
+  height: 200px;
+  margin-top: 16px;
+}
+
+.chart-container canvas {
+  max-height: 200px;
+}
